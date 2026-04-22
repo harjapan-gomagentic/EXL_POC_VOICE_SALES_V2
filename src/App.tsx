@@ -13,7 +13,9 @@ function Router() {
 export default function App() {
   return (
     <AppProvider>
-      <Router />
+      <div className="app-viewport">
+        <Router />
+      </div>
     </AppProvider>
   );
 }

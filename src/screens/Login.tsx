@@ -76,7 +76,7 @@ export default function Login() {
   };
 
   return (
-    <div style={{ display: 'flex', width: '100%', height: '100%', background: 'var(--bg)' }}>
+    <div style={{ display: 'flex', width: '100%', flex: 1, minHeight: 0, minWidth: 0, overflow: 'auto', background: 'var(--bg)' }}>
       {/* LEFT — Orange Brand Panel */}
       <div style={{
         width: '52%',

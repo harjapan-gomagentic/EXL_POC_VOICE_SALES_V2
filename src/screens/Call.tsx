@@ -481,7 +481,10 @@ export default function Call() {
   }
 
   return (
-    <div style={{ display: 'flex', width: '100%', height: '100%', background: 'var(--bg)' }}>
+    <div
+      className="call-app-shell"
+      style={{ display: 'flex', width: '100%', flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden', background: 'var(--bg)' }}
+    >
       <aside className="call-sidebar-premium">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 36 }}>
           <div style={{ width: 40, height: 40, borderRadius: 12, background: 'linear-gradient(135deg, #ff5c14, #e04400)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px rgba(255,78,0,0.35)' }}>
@@ -695,7 +698,7 @@ export default function Call() {
               <strong style={{ color: 'var(--text-1)' }}>Widen your window</strong> to pin the full <strong>Live insights</strong> panel (SPIN guide, session counts, and scenario brief). The tip above stays on all screen sizes.
             </span>
           </div>
-          <div style={{ maxWidth: 720, margin: '0 auto' }}>
+          <div style={{ width: '100%', maxWidth: 'min(720px, 100%)', margin: '0 auto' }}>
             {!voiceSupported && (
               <div style={{ marginBottom: 12, padding: '12px 16px', background: 'rgba(255,255,255,0.7)', borderRadius: 14, border: '1px solid var(--border)', fontSize: 13, color: 'var(--text-2)', lineHeight: 1.55 }}>
                 Voice works in <strong style={{ color: 'var(--text-1)' }}>Chrome</strong> or <strong style={{ color: 'var(--text-1)' }}>Edge</strong>. Type your message below anytime.

@@ -8,7 +8,7 @@ export default function Brief() {
   useEffect(() => { setTimeout(() => setMounted(true), 100); }, []);
 
   return (
-    <div style={{ display: 'flex', width: '100%', height: '100%', background: 'var(--bg)', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
+    <div style={{ display: 'flex', width: '100%', flex: 1, minHeight: 0, minWidth: 0, overflow: 'auto', background: 'var(--bg)', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
       
       <div 
         className="slide-up-card" 
