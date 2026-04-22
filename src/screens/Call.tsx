@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useApp, type Message } from '../context/AppContext';
 import { askMarcus } from '../lib/marcus';
 import { generateScenarioACoachDebrief, spinCountsFromMessages } from '../lib/coachDebrief';
+import { generateLiveNextMove, type LiveNextMove } from '../lib/liveNextMove';
 import {
   SPIN_LEGEND,
   SCENARIO_A_CONTEXT,
@@ -64,6 +65,11 @@ export default function Call() {
   const { state, dispatch } = useApp();
   const [input, setInput] = useState('');
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [liveNextMove, setLiveNextMove] = useState<LiveNextMove | null>(null);
+  const [liveNextMoveLoading, setLiveNextMoveLoading] = useState(false);
+  const liveNextMoveReqId = useRef(0);
+  const completedStepsRef = useRef<number[]>([]);
+  completedStepsRef.current = completedSteps;
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const coachDebriefStarted = useRef(false);
@@ -111,11 +117,30 @@ export default function Call() {
 
     // Track mission step completion heuristically
     const lower = trimmed.toLowerCase();
-    if (lower.includes('name') || lower.includes('exl') || lower.includes('service')) maybeComplete(0);
-    if (lower.includes('challenge') || lower.includes('problem') || lower.includes('operation') || lower.includes('claim')) maybeComplete(1);
-    if (lower.includes('cost') || lower.includes('impact') || lower.includes('affect') || lower.includes('leak')) maybeComplete(2);
-    if (lower.includes('value') || lower.includes('worth') || lower.includes('mean') || lower.includes('benefit')) maybeComplete(3);
-    if (lower.includes('next') || lower.includes('meeting') || lower.includes('follow') || lower.includes('schedule') || lower.includes('tuesday')) maybeComplete(4);
+    const completedForCoach = [...completedStepsRef.current];
+    const markCoachStep = (step: number) => {
+      if (!completedForCoach.includes(step)) completedForCoach.push(step);
+    };
+    if (lower.includes('name') || lower.includes('exl') || lower.includes('service')) {
+      maybeComplete(0);
+      markCoachStep(0);
+    }
+    if (lower.includes('challenge') || lower.includes('problem') || lower.includes('operation') || lower.includes('claim')) {
+      maybeComplete(1);
+      markCoachStep(1);
+    }
+    if (lower.includes('cost') || lower.includes('impact') || lower.includes('affect') || lower.includes('leak')) {
+      maybeComplete(2);
+      markCoachStep(2);
+    }
+    if (lower.includes('value') || lower.includes('worth') || lower.includes('mean') || lower.includes('benefit')) {
+      maybeComplete(3);
+      markCoachStep(3);
+    }
+    if (lower.includes('next') || lower.includes('meeting') || lower.includes('follow') || lower.includes('schedule') || lower.includes('tuesday')) {
+      maybeComplete(4);
+      markCoachStep(4);
+    }
 
     try {
       const history = [...state.messages, userMsg].map(m => ({
@@ -144,6 +169,29 @@ export default function Call() {
       };
       dispatch({ type: 'ADD_MESSAGE', message: assistantMsg });
       speak(response);
+
+      const historyForCoach = [...state.messages, userMsg, assistantMsg].map(m => ({
+        role: m.role,
+        content: m.content,
+      }));
+      const coachRid = ++liveNextMoveReqId.current;
+      setLiveNextMoveLoading(true);
+      generateLiveNextMove({
+        repName: state.repName,
+        repRole: state.repRole,
+        messages: historyForCoach,
+        completedMissionStepIndices: completedForCoach,
+      })
+        .then(data => {
+          if (coachRid !== liveNextMoveReqId.current) return;
+          setLiveNextMove(data);
+        })
+        .catch(err => {
+          console.error('Live next move error:', err);
+        })
+        .finally(() => {
+          if (coachRid === liveNextMoveReqId.current) setLiveNextMoveLoading(false);
+        });
     } catch (err) {
       console.error('Marcus error:', err);
       dispatch({
@@ -214,6 +262,17 @@ export default function Call() {
   const missionIdx = useMemo(() => nextMissionIndex(completedSteps), [completedSteps]);
   const missionProgressPct = useMemo(() => (completedSteps.length / MISSION_COACH_LINES.length) * 100, [completedSteps]);
   const showWelcomeHero = state.messages.length <= 1 && !state.isLoading;
+  const playbookNextMove = MISSION_COACH_LINES[missionIdx];
+  const displayNextMove = liveNextMove ?? playbookNextMove;
+  const nextMoveIsAi = liveNextMove !== null;
+
+  useEffect(() => {
+    if (userExchangeCount === 0) {
+      liveNextMoveReqId.current += 1;
+      setLiveNextMove(null);
+      setLiveNextMoveLoading(false);
+    }
+  }, [userExchangeCount]);
 
   useEffect(() => {
     if (!state.callEnded) coachDebriefStarted.current = false;
@@ -796,12 +855,28 @@ export default function Call() {
           </p>
         </div>
 
-        <div className="call-insight-card call-insight-card--accent">
-          <div className="mono" style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', color: 'var(--orange-deep)', marginBottom: 8 }}>YOUR NEXT MOVE</div>
-          <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-1)', marginBottom: 6 }}>{MISSION_COACH_LINES[missionIdx].title}</div>
-          <p style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.5, margin: 0 }}>{MISSION_COACH_LINES[missionIdx].tip}</p>
+        <div
+          className="call-insight-card call-insight-card--accent"
+          style={{
+            opacity: liveNextMoveLoading ? 0.88 : 1,
+            transition: 'opacity 0.25s ease',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
+            <div className="mono" style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', color: 'var(--orange-deep)' }}>YOUR NEXT MOVE</div>
+            {liveNextMoveLoading && (
+              <span className="mono call-ai-updating-label" style={{ fontSize: 9, fontWeight: 700, color: 'var(--orange-deep)' }}>
+                AI updating…
+              </span>
+            )}
+          </div>
+          <p className="mono" style={{ fontSize: 9, fontWeight: 600, color: 'var(--text-3)', letterSpacing: '0.06em', margin: '0 0 10px' }}>
+            {nextMoveIsAi ? 'Tailored after last exchange' : 'Playbook baseline until you send'}
+          </p>
+          <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-1)', marginBottom: 6 }}>{displayNextMove.title}</div>
+          <p style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.5, margin: 0 }}>{displayNextMove.tip}</p>
           <p className="mono" style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 10, marginBottom: 0 }}>
-            SPIN lens · {MISSION_COACH_LINES[missionIdx].spinFocus}
+            SPIN lens · {displayNextMove.spinFocus}
           </p>
         </div>
 
