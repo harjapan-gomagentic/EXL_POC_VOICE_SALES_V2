@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 
 const ROLES = ['Account Executive', 'Senior Account Executive', 'Sales Director', 'VP Sales', 'Practice Lead'];
+const CHIPS = ['Live voice rehearsal', 'Scenario A buyer', 'Structured debrief'] as const;
+const CHIP_DELAYS = ['login-chip--delay-1', 'login-chip--delay-2', 'login-chip--delay-3'] as const;
 
 function AnimatedBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -19,15 +21,14 @@ function AnimatedBackground() {
     resize();
     const w = () => canvas.offsetWidth;
     const h = () => canvas.offsetHeight;
-    
-    // Floating orbs
-    const orbs = Array.from({ length: 5 }, () => ({
+
+    const orbs = Array.from({ length: 6 }, () => ({
       x: Math.random() * w(),
       y: Math.random() * h(),
-      r: 80 + Math.random() * 160,
-      vx: (Math.random() - 0.5) * 0.3,
-      vy: (Math.random() - 0.5) * 0.3,
-      opacity: 0.06 + Math.random() * 0.08,
+      r: 70 + Math.random() * 140,
+      vx: (Math.random() - 0.5) * 0.45,
+      vy: (Math.random() - 0.5) * 0.45,
+      opacity: 0.05 + Math.random() * 0.09,
     }));
 
     const draw = () => {
@@ -51,9 +52,12 @@ function AnimatedBackground() {
     };
     animId = requestAnimationFrame(draw);
     window.addEventListener('resize', resize);
-    return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', resize); };
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener('resize', resize);
+    };
   }, []);
-  return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} />;
+  return <canvas ref={canvasRef} className="login-canvas" aria-hidden />;
 }
 
 export default function Login() {
@@ -64,7 +68,10 @@ export default function Login() {
   const [mounted, setMounted] = useState(false);
   const valid = name.trim().length > 1 && role.length > 0;
 
-  useEffect(() => { setTimeout(() => setMounted(true), 100); }, []);
+  useEffect(() => {
+    const t = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(t);
+  }, []);
 
   const handleStart = (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,207 +79,143 @@ export default function Login() {
     setLoading(true);
     setTimeout(() => {
       dispatch({ type: 'START_BRIEF', name: name.trim(), role });
-    }, 700);
+    }, 650);
   };
 
   return (
-    <div style={{ display: 'flex', width: '100%', flex: 1, minHeight: 0, minWidth: 0, overflow: 'auto', background: 'var(--bg)' }}>
-      {/* LEFT — Orange Brand Panel */}
-      <div style={{
-        width: '52%',
-        background: 'linear-gradient(155deg, #FF5500 0%, #FF3500 40%, #E02800 100%)',
-        backgroundSize: '200% 200%',
-        animation: 'gradient-shift 8s ease infinite',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        padding: '48px 56px',
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
+    <div className="login-root">
+      <section className={`login-hero ${mounted ? 'login-hero--stagger' : ''}`}>
         <AnimatedBackground />
-
-        {/* Decorative shapes */}
-        <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-          <div style={{ position: 'absolute', top: -160, right: -100, width: 500, height: 500, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)' }} />
-          <div style={{ position: 'absolute', top: -100, right: -40, width: 400, height: 400, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.06)' }} />
-          <div style={{ position: 'absolute', bottom: -100, left: -60, width: 350, height: 350, borderRadius: '50%', background: 'rgba(0,0,0,0.08)' }} />
-          <div style={{ position: 'absolute', bottom: 120, right: 80, width: 12, height: 12, borderRadius: '50%', background: 'rgba(255,255,255,0.3)', animation: 'float 4s ease-in-out infinite' }} />
-          <div style={{ position: 'absolute', top: 200, right: 160, width: 8, height: 8, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', animation: 'float 5s ease-in-out 1s infinite' }} />
-          <div style={{ position: 'absolute', top: '45%', left: '15%', width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', animation: 'float 6s ease-in-out 2s infinite' }} />
+        <div className="login-hero__mesh" aria-hidden />
+        <div className="login-hero__rings" aria-hidden>
+          <div className="login-hero__ring login-hero__ring--a" />
+          <div className="login-hero__ring login-hero__ring--b" />
         </div>
+        <div className="login-hero__spark login-hero__spark--1" />
+        <div className="login-hero__spark login-hero__spark--2" />
+        <div className="login-hero__spark login-hero__spark--3" />
 
-        {/* Logo */}
-        <div style={{ position: 'relative', zIndex: 1, opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0)' : 'translateY(-10px)', transition: 'all 0.6s cubic-bezier(0.16,1,0.3,1)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontWeight: 900, fontSize: 24, color: '#fff', letterSpacing: '0.06em' }}>EXL</span>
-            <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.3)' }} />
-            <span style={{ fontWeight: 500, fontSize: 14, color: 'rgba(255,255,255,0.7)' }}>Service</span>
+        <header className="login-brand">
+          <div className="login-brand__mark">EXL</div>
+          <div className="login-brand__divider" aria-hidden />
+          <div className="login-brand__text">
+            <span className="login-brand__exl">Service</span>
+            <span className="login-brand__sub">Voice sales lab · internal build</span>
           </div>
-        </div>
+        </header>
 
-        {/* Hero copy */}
-        <div style={{ position: 'relative', zIndex: 1, opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0)' : 'translateY(20px)', transition: 'all 0.8s cubic-bezier(0.16,1,0.3,1) 0.2s' }}>
-          <div className="mono" style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 20 }}>
-            AI Sales Simulation
-          </div>
-          <h1 style={{ fontSize: 52, fontWeight: 900, color: '#fff', lineHeight: 1.05, letterSpacing: '-0.025em', marginBottom: 20 }}>
-            Practice the<br/>consultative sale.
+        <div className="login-hero__content">
+          <p className="mono login-hero__kicker">EXL voice enablement</p>
+          <h1 className="login-hero__title">
+            Rehearse the call
+            <br />
+            you can&apos;t afford to wing.
           </h1>
-          <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.7)', lineHeight: 1.7, maxWidth: 400, fontWeight: 400 }}>
-            Earn trust. Uncover pain. Close deals — before you walk into the room.
+          <p className="login-hero__lead">
+            Speak with a responsive buyer, stay in SPIN rhythm, and end with a scorecard-style debrief — built for Scenario A and the way EXL trains teams.
           </p>
-
-          {/* Feature tags */}
-          <div style={{ display: 'flex', gap: 10, marginTop: 40, flexWrap: 'wrap' }}>
-            {['Real AI Prospect', 'Voice Enabled', 'Live Coaching'].map((tag, i) => (
-              <span key={tag} style={{
-                padding: '8px 18px',
-                borderRadius: 99,
-                background: 'rgba(255,255,255,0.12)',
-                backdropFilter: 'blur(8px)',
-                color: '#fff',
-                fontSize: 13,
-                fontWeight: 500,
-                border: '1px solid rgba(255,255,255,0.18)',
-                opacity: mounted ? 1 : 0,
-                transform: mounted ? 'translateY(0)' : 'translateY(10px)',
-                transition: `all 0.6s cubic-bezier(0.16,1,0.3,1) ${0.5 + i * 0.1}s`,
-              }}>{tag}</span>
+          <div className="login-chips">
+            {CHIPS.map((tag, i) => (
+              <span key={tag} className={`login-chip ${mounted ? CHIP_DELAYS[i] : ''}`}>
+                {tag}
+              </span>
             ))}
           </div>
         </div>
 
-        {/* Bottom quote */}
-        <div style={{ position: 'relative', zIndex: 1, borderTop: '1px solid rgba(255,255,255,0.12)', paddingTop: 20, opacity: mounted ? 1 : 0, transition: 'opacity 0.8s ease 0.6s' }}>
-          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', fontStyle: 'italic', lineHeight: 1.6 }}>
-            "The best reps don't just talk — they ask the right questions."
-          </p>
-          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 6 }}>Korn Ferry SPIN® Methodology</p>
-        </div>
-      </div>
+        <footer className="login-quote">
+          <p>&ldquo;Feedback belongs in the moment — not two weeks later in a slide deck.&rdquo;</p>
+          <p>Korn Ferry SPIN® framing · EXL delivery model</p>
+        </footer>
+      </section>
 
-      {/* RIGHT — Login Form */}
-      <div style={{
-        width: '48%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '48px',
-        background: 'var(--bg)',
-      }}>
-        <div style={{ width: '100%', maxWidth: 420, opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0)' : 'translateY(20px)', transition: 'all 0.7s cubic-bezier(0.16,1,0.3,1) 0.3s' }}>
-          <div style={{ marginBottom: 40 }}>
-            <h2 style={{ fontSize: 32, fontWeight: 800, color: 'var(--text-1)', letterSpacing: '-0.02em', marginBottom: 10 }}>
-              Sign in
-            </h2>
-            <p style={{ fontSize: 15, color: 'var(--text-3)', lineHeight: 1.6 }}>Enter your details to start the simulation.</p>
+      <section className="login-panel">
+        <div className="login-panel__blob" aria-hidden />
+        <div className={`login-card ${mounted ? 'login-card--enter' : ''}`}>
+          <div className="login-card__head">
+            <h2>Claim your seat</h2>
+            <p>Name and role shape the briefing, prompts, and what we emphasize on the recap.</p>
           </div>
 
-          <form onSubmit={handleStart}>
-            {/* Name */}
-            <div style={{ marginBottom: 22 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 8 }}>
-                Your Name
-              </label>
+          <form onSubmit={handleStart} style={{ marginTop: 28 }}>
+            <div className="login-field">
+              <label htmlFor="login-name">Your name</label>
               <input
+                id="login-name"
                 type="text"
+                className="login-input"
                 value={name}
                 onChange={e => setName(e.target.value)}
                 placeholder="e.g. Sarah Johnson"
+                autoComplete="name"
                 autoFocus
-                style={{
-                  width: '100%',
-                  padding: '14px 18px',
-                  borderRadius: 12,
-                  border: '1.5px solid var(--border)',
-                  background: 'var(--surface)',
-                  fontSize: 15,
-                  color: 'var(--text-1)',
-                  transition: 'border-color 200ms, box-shadow 200ms',
-                  outline: 'none',
-                }}
-                onFocus={e => { e.target.style.borderColor = 'var(--orange)'; e.target.style.boxShadow = '0 0 0 4px var(--orange-glow)'; }}
-                onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'none'; }}
               />
             </div>
 
-            {/* Role */}
-            <div style={{ marginBottom: 32, position: 'relative' }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 8 }}>
-                Your Role
-              </label>
+            <div className="login-field">
+              <label htmlFor="login-role">Your role</label>
               <div style={{ position: 'relative' }}>
                 <select
+                  id="login-role"
+                  className={`login-select ${!role ? 'placeholder' : ''}`}
                   value={role}
                   onChange={e => setRole(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '14px 44px 14px 18px',
-                    borderRadius: 12,
-                    border: '1.5px solid var(--border)',
-                    background: 'var(--surface)',
-                    fontSize: 15,
-                    color: role ? 'var(--text-1)' : 'var(--text-3)',
-                    appearance: 'none',
-                    cursor: 'pointer',
-                    outline: 'none',
-                    transition: 'border-color 200ms, box-shadow 200ms',
-                  }}
-                  onFocus={e => { e.target.style.borderColor = 'var(--orange)'; e.target.style.boxShadow = '0 0 0 4px var(--orange-glow)'; }}
-                  onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'none'; }}
                 >
-                  <option value="" disabled>Select your role</option>
-                  {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                  <option value="" disabled>
+                    Select your role
+                  </option>
+                  {ROLES.map(r => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
                 </select>
-                <svg style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" strokeWidth="2">
-                  <path d="M6 9l6 6 6-6"/>
+                <svg
+                  style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="var(--text-3)"
+                  strokeWidth="2.2"
+                  aria-hidden
+                >
+                  <path d="M6 9l6 6 6-6" />
                 </svg>
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={!valid || loading}
-              style={{
-                width: '100%',
-                height: 54,
-                borderRadius: 14,
-                border: 'none',
-                background: valid ? 'linear-gradient(135deg, #FF5500, #FF3300)' : 'var(--border)',
-                color: valid ? '#fff' : 'var(--text-3)',
-                fontSize: 16,
-                fontWeight: 700,
-                cursor: valid && !loading ? 'pointer' : 'not-allowed',
-                transition: 'all 300ms cubic-bezier(0.16,1,0.3,1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                boxShadow: valid ? '0 6px 24px rgba(255,78,0,0.35)' : 'none',
-                transform: valid ? 'translateY(0)' : 'translateY(0)',
-                letterSpacing: '0.01em',
-              }}
-              onMouseEnter={e => { if (valid && !loading) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 10px 36px rgba(255,78,0,0.45)'; } }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = valid ? '0 6px 24px rgba(255,78,0,0.35)' : 'none'; }}
-            >
+            <button type="submit" className="login-submit" disabled={!valid || loading}>
+              <span className="login-submit__shine" aria-hidden />
               {loading ? (
-                <div style={{ display: 'flex', gap: 6 }}>
-                  {[0,1,2].map(i => (
-                    <div key={i} style={{ width: 7, height: 7, borderRadius: '50%', background: '#fff', animation: `dot-bounce 1s ease-in-out ${i * 0.15}s infinite` }} />
+                <span style={{ display: 'flex', gap: 6, justifyContent: 'center', alignItems: 'center' }}>
+                  {[0, 1, 2].map(i => (
+                    <span
+                      key={i}
+                      style={{
+                        width: 7,
+                        height: 7,
+                        borderRadius: '50%',
+                        background: '#fff',
+                        animation: `dot-bounce 0.9s ease-in-out ${i * 0.14}s infinite`,
+                      }}
+                    />
                   ))}
-                </div>
+                </span>
               ) : (
-                <>Start Training <span style={{ fontSize: 18 }}>→</span></>
+                <span style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                  Open voice session
+                  <span style={{ fontSize: 20, lineHeight: 1, transition: 'transform 0.3s ease' }} aria-hidden>
+                    →
+                  </span>
+                </span>
               )}
             </button>
           </form>
 
-          <p style={{ fontSize: 12, color: 'var(--text-3)', textAlign: 'center', marginTop: 28, lineHeight: 1.6 }}>
-            SPIN® is a registered trademark of Korn Ferry · EXL Service
-          </p>
+          <p className="login-footnote">SPIN® is a registered trademark of Korn Ferry · Demonstration environment for EXL stakeholders</p>
         </div>
-      </div>
+      </section>
     </div>
   );
 }
