@@ -35,13 +35,6 @@ export default function Scorecard() {
     [state.messages],
   );
   const pct = toPercentages(counts);
-  const needsSurfaced = useMemo(
-    () =>
-      [state.coachDebrief?.hidden_pain_1_status, state.coachDebrief?.hidden_pain_2_status, state.coachDebrief?.hidden_pain_3_status].filter(
-        s => s === 'surfaced' || s === 'partially_surfaced',
-      ).length,
-    [state.coachDebrief],
-  );
 
   const overallScore = state.coachDebrief?.overall_score ?? Math.min(100, counts.P * 8 + counts.I * 12 + counts.N * 10 + 20);
 
@@ -59,9 +52,7 @@ export default function Scorecard() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(140px, 1fr))', gap: 10, marginBottom: 20 }}>
           {[
             { label: 'Overall score', value: `${overallScore} / 100` },
-            { label: 'Needs surfaced', value: `${needsSurfaced} / 3` },
             { label: 'Commitment type', value: state.callOutcome },
-            { label: 'Demo timing', value: state.coachDebrief?.demo_timing_bucket ?? 'Review replay' },
           ].map(card => (
             <div key={card.label} style={{ border: '1px solid var(--border)', borderRadius: 12, background: 'var(--surface-2)', padding: '12px 14px' }}>
               <div style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 4 }}>{card.label}</div>

@@ -8,6 +8,13 @@ const SPIN_BLOCKS = [
   { letter: 'N', title: 'Need-Payoff', line: 'Ask what better looks like. Let them sell themselves.' },
 ] as const;
 
+const SPIN_TAG_COLORS: Record<(typeof SPIN_BLOCKS)[number]['letter'], { bg: string; text: string }> = {
+  S: { bg: '#E6F1FB', text: '#0C447C' },
+  P: { bg: '#FAEEDA', text: '#633806' },
+  I: { bg: '#FAECE7', text: '#712B13' },
+  N: { bg: '#E1F5EE', text: '#085041' },
+};
+
 export default function HowItWorks() {
   const { dispatch } = useApp();
   const [mounted, setMounted] = useState(false);
@@ -79,6 +86,7 @@ export default function HowItWorks() {
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {/** Keep these SPIN tag colors reusable for annotated replay later */}
                 <span
                   className="mono"
                   style={{
@@ -88,8 +96,8 @@ export default function HowItWorks() {
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    background: 'linear-gradient(135deg, #ff5c14 0%, #e04400 100%)',
-                    color: '#fff',
+                    background: SPIN_TAG_COLORS[block.letter].bg,
+                    color: SPIN_TAG_COLORS[block.letter].text,
                     fontSize: 14,
                     fontWeight: 800,
                   }}

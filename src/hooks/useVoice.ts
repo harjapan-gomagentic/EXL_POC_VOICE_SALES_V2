@@ -48,6 +48,8 @@ export type VoiceOptions = {
   /** After this many ms without new speech results, stop and invoke `onAutoSend` (conversation mode). */
   autoSendAfterSilenceMs?: number;
   onAutoSend?: (text: string) => void;
+  /** If true, microphone auto-resumes after each auto-sent turn. */
+  continuousAutoSend?: boolean;
 };
 
 const DEFAULT_SILENCE_MS = 700;
@@ -73,6 +75,8 @@ export function useVoice(onResult: (text: string) => void, options?: VoiceOption
 
   const onAutoSendRef = useRef(options?.onAutoSend);
   onAutoSendRef.current = options?.onAutoSend;
+  const continuousAutoSendRef = useRef(Boolean(options?.continuousAutoSend));
+  continuousAutoSendRef.current = Boolean(options?.continuousAutoSend);
 
   const autoSilenceMs = options?.autoSendAfterSilenceMs ?? (options?.onAutoSend ? DEFAULT_SILENCE_MS : undefined);
 
@@ -224,9 +228,21 @@ export function useVoice(onResult: (text: string) => void, options?: VoiceOption
         const text = lastCombinedRef.current.trim();
         lastCombinedRef.current = '';
         finalsRef.current = '';
+        if (text) onAutoSendRef.current?.(text);
+
+        if (continuousAutoSendRef.current) {
+          wantListenRef.current = true;
+          try {
+            rec.start();
+            setIsListening(true);
+            return;
+          } catch {
+            wantListenRef.current = false;
+          }
+        }
+
         cleanupStream();
         setIsListening(false);
-        if (text) onAutoSendRef.current?.(text);
         return;
       }
 
