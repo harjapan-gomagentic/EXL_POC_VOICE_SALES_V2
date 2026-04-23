@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer } from 'react';
-import type { ScenarioACoachDebrief } from '../lib/coachDebrief';
+import type { CoachOutcome, ScenarioACoachDebrief } from '../lib/coachDebrief';
 
-export type Screen = 'login' | 'brief' | 'call';
+export type Screen = 'login' | 'how_it_works' | 'brief' | 'call' | 'replay' | 'scorecard';
 
 export interface Message {
   id: string;
@@ -20,6 +20,7 @@ export interface AppState {
   isLoading: boolean;
   isRecording: boolean;
   callEnded: boolean;
+  callOutcome: CoachOutcome;
   coachDebrief: ScenarioACoachDebrief | null;
   coachDebriefLoading: boolean;
 }
@@ -32,17 +33,21 @@ const initialState: AppState = {
   isLoading: false,
   isRecording: false,
   callEnded: false,
+  callOutcome: 'no_sale',
   coachDebrief: null,
   coachDebriefLoading: false,
 };
 
 export type Action =
   | { type: 'START_BRIEF'; name: string; role: string }
+  | { type: 'START_DISCOVERY' }
   | { type: 'START_CALL' }
+  | { type: 'OPEN_SCORECARD' }
+  | { type: 'OPEN_REPLAY' }
   | { type: 'ADD_MESSAGE'; message: Message }
   | { type: 'SET_LOADING'; value: boolean }
   | { type: 'SET_RECORDING'; value: boolean }
-  | { type: 'END_CALL' }
+  | { type: 'END_CALL'; outcome: CoachOutcome }
   | { type: 'SET_COACH_DEBRIEF'; data: ScenarioACoachDebrief }
   | { type: 'SET_COACH_DEBRIEF_LOADING'; loading: boolean }
   | { type: 'RESET' };
@@ -50,16 +55,23 @@ export type Action =
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     case 'START_BRIEF':
-      return { ...state, screen: 'brief', repName: action.name, repRole: action.role };
+      return { ...state, screen: 'how_it_works', repName: action.name, repRole: action.role };
+    case 'START_DISCOVERY':
+      return { ...state, screen: 'brief' };
     case 'START_CALL':
       return {
         ...state,
         screen: 'call',
         messages: [],
         callEnded: false,
+        callOutcome: 'no_sale',
         coachDebrief: null,
         coachDebriefLoading: false,
       };
+    case 'OPEN_SCORECARD':
+      return { ...state, screen: 'scorecard' };
+    case 'OPEN_REPLAY':
+      return { ...state, screen: 'replay' };
     case 'ADD_MESSAGE':
       return { ...state, messages: [...state.messages, action.message] };
     case 'SET_LOADING':
@@ -67,7 +79,15 @@ function reducer(state: AppState, action: Action): AppState {
     case 'SET_RECORDING':
       return { ...state, isRecording: action.value };
     case 'END_CALL':
-      return { ...state, callEnded: true, coachDebrief: null, coachDebriefLoading: false };
+      return {
+        ...state,
+        screen: 'replay',
+        callEnded: true,
+        callOutcome: action.outcome,
+        isLoading: false,
+        coachDebrief: null,
+        coachDebriefLoading: false,
+      };
     case 'SET_COACH_DEBRIEF':
       return { ...state, coachDebrief: action.data, coachDebriefLoading: false };
     case 'SET_COACH_DEBRIEF_LOADING':

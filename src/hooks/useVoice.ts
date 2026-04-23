@@ -50,7 +50,7 @@ export type VoiceOptions = {
   onAutoSend?: (text: string) => void;
 };
 
-const DEFAULT_SILENCE_MS = 1150;
+const DEFAULT_SILENCE_MS = 700;
 
 /**
  * Browser Web Speech API (Chrome / Edge). Continuous + interim for reliability on Windows.

@@ -14,6 +14,11 @@ export interface ScenarioACoachDebrief {
   improve: string;
   next_call_focus: string;
   outcome_label: CoachOutcome;
+  overall_score?: number;
+  demo_timing_bucket?: 'early' | 'timely' | 'late' | 'unknown';
+  hidden_pain_1_status?: 'surfaced' | 'partially_surfaced' | 'missed';
+  hidden_pain_2_status?: 'surfaced' | 'partially_surfaced' | 'missed';
+  hidden_pain_3_status?: 'surfaced' | 'partially_surfaced' | 'missed';
 }
 
 export type CoachMessage = {
@@ -51,17 +56,20 @@ SPIN (Korn Ferry / investigative selling) — apply this lens:
 `.trim();
 
 const SCENARIO_A_BLOCK = `
-Scenario A (only scenario in scope): Existing EXL client (Hartwell), strong relationship, new scope / discovery on operations.
-The rep must surface a hidden operational pain (claims leakage / payout speed) without the meeting feeling like a generic "sales visit."
-Marcus is warm but will not volunteer problems; rapport can become a "comfortable trap" — reward navigation toward real discovery and a concrete next step.
+Scenario context: Marcus Holt (COO) at Arvenix Life, a mid-size insurer across EU and APAC.
+Hidden pain 1: fragmented policy/admin platforms slow cycle time across markets.
+Hidden pain 2: no single source of truth for operations reporting (manual dashboard assembly, inconsistent numbers).
+Hidden pain 3: advisor portal experience is weak, forcing email/spreadsheet workarounds and distribution risk.
+Marcus is polished and friendly; he may describe operations as "manageable" until implication questions surface true cost.
 `.trim();
 
 export async function generateScenarioACoachDebrief(params: {
   repName: string;
   repRole: string;
   messages: CoachMessage[];
+  commitmentOutcome?: CoachOutcome;
 }): Promise<ScenarioACoachDebrief> {
-  const { repName, repRole, messages } = params;
+  const { repName, repRole, messages, commitmentOutcome } = params;
   const spinCounts = countSpinFromTranscript(messages);
 
   const lines: string[] = [];
@@ -87,7 +95,12 @@ export async function generateScenarioACoachDebrief(params: {
   "did_well" (one specific strength with example from transcript),
   "improve" (one specific improvement tied to SPIN),
   "next_call_focus" (single priority for next practice),
-  "outcome_label" (exactly one of: "advance", "continuation", "no_sale" based on the rep's close and Marcus's response)`;
+  "outcome_label" (exactly one of: "advance", "continuation", "no_sale" based on the rep's close and Marcus's response),
+  "overall_score" (integer 0..100),
+  "demo_timing_bucket" (exactly one of: "early", "timely", "late", "unknown"),
+  "hidden_pain_1_status" (exactly one of: "surfaced", "partially_surfaced", "missed"),
+  "hidden_pain_2_status" (exactly one of: "surfaced", "partially_surfaced", "missed"),
+  "hidden_pain_3_status" (exactly one of: "surfaced", "partially_surfaced", "missed")`;
 
   const prompt = `
 You are an expert sales coach certified in Korn Ferry SPIN / SPIN 3.0 investigative selling.
@@ -98,6 +111,7 @@ ${SCENARIO_A_BLOCK}
 
 REP: ${repName} (${repRole})
 SPIN COUNTS (from live tagging of rep turns): ${JSON.stringify(spinCounts)}
+HEURISTIC COMMITMENT OUTCOME (from app logic): ${commitmentOutcome ?? 'unknown'}
 
 FULL TRANSCRIPT:
 ${transcript || '(empty — say they ended before a real conversation)'}
@@ -139,6 +153,26 @@ ${schemaHint}
     improve: String(parsed.improve ?? ''),
     next_call_focus: String(parsed.next_call_focus ?? ''),
     outcome_label,
+    overall_score: Number.isFinite(parsed.overall_score) ? Number(parsed.overall_score) : 0,
+    demo_timing_bucket:
+      parsed.demo_timing_bucket === 'early' ||
+      parsed.demo_timing_bucket === 'timely' ||
+      parsed.demo_timing_bucket === 'late' ||
+      parsed.demo_timing_bucket === 'unknown'
+        ? parsed.demo_timing_bucket
+        : 'unknown',
+    hidden_pain_1_status:
+      parsed.hidden_pain_1_status === 'surfaced' || parsed.hidden_pain_1_status === 'partially_surfaced' || parsed.hidden_pain_1_status === 'missed'
+        ? parsed.hidden_pain_1_status
+        : 'missed',
+    hidden_pain_2_status:
+      parsed.hidden_pain_2_status === 'surfaced' || parsed.hidden_pain_2_status === 'partially_surfaced' || parsed.hidden_pain_2_status === 'missed'
+        ? parsed.hidden_pain_2_status
+        : 'missed',
+    hidden_pain_3_status:
+      parsed.hidden_pain_3_status === 'surfaced' || parsed.hidden_pain_3_status === 'partially_surfaced' || parsed.hidden_pain_3_status === 'missed'
+        ? parsed.hidden_pain_3_status
+        : 'missed',
   };
 }
 

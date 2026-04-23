@@ -214,7 +214,7 @@ export default function Call() {
   };
 
   const { isListening, voiceError, clearVoiceError, start: startMic, stop: stopMic } = useVoice(handleResult, {
-    autoSendAfterSilenceMs: 1200,
+    autoSendAfterSilenceMs: 700,
     onAutoSend: text => sendMessageRef.current(text),
   });
 
@@ -617,7 +617,7 @@ export default function Call() {
         {/* End call button at bottom */}
         <div style={{ marginTop: 'auto', paddingTop: 32 }}>
           <button
-            onClick={() => dispatch({ type: 'END_CALL' })}
+            onClick={() => dispatch({ type: 'END_CALL', outcome: 'no_sale' })}
             style={{
               width: '100%', height: 44, borderRadius: 10, border: '1.5px solid var(--border-dark)',
               background: 'transparent', color: 'var(--text-2)', fontSize: 14, fontWeight: 600,
@@ -947,3 +947,4 @@ function useTimer() {
   }, []);
   return t;
 }
+
