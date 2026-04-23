@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 
-const ROLES = ['Account Executive', 'Senior Account Executive', 'Sales Director', 'VP Sales', 'Practice Lead'];
-const CHIPS = ['Live voice rehearsal', 'Scenario A buyer', 'Structured debrief'] as const;
-const CHIP_DELAYS = ['login-chip--delay-1', 'login-chip--delay-2', 'login-chip--delay-3'] as const;
+const ROLES = ['Sales Director (Practice)'];
 
 function AnimatedBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -87,46 +85,18 @@ export default function Login() {
       <section className={`login-hero ${mounted ? 'login-hero--stagger' : ''}`}>
         <AnimatedBackground />
         <div className="login-hero__mesh" aria-hidden />
-        <div className="login-hero__rings" aria-hidden>
-          <div className="login-hero__ring login-hero__ring--a" />
-          <div className="login-hero__ring login-hero__ring--b" />
+        <div className="login-hero__logo-wrap">
+          <img src="/exl-logo.png" alt="EXL logo" className="login-hero__logo" />
         </div>
-        <div className="login-hero__spark login-hero__spark--1" />
-        <div className="login-hero__spark login-hero__spark--2" />
-        <div className="login-hero__spark login-hero__spark--3" />
-
-        <header className="login-brand">
-          <div className="login-brand__mark">EXL</div>
-          <div className="login-brand__divider" aria-hidden />
-          <div className="login-brand__text">
-            <span className="login-brand__exl">Service</span>
-            <span className="login-brand__sub">Voice sales lab · internal build</span>
-          </div>
-        </header>
 
         <div className="login-hero__content">
-          <p className="mono login-hero__kicker">EXL voice enablement</p>
           <h1 className="login-hero__title">
-            Rehearse the call
-            <br />
-            you can&apos;t afford to wing.
+            Practice the conversation. Perfect the outcome.
           </h1>
           <p className="login-hero__lead">
-            Speak with a responsive buyer, stay in SPIN rhythm, and end with a scorecard-style debrief — built for Scenario A and the way EXL trains teams.
+            Enter your details to begin your SPIN simulation session.
           </p>
-          <div className="login-chips">
-            {CHIPS.map((tag, i) => (
-              <span key={tag} className={`login-chip ${mounted ? CHIP_DELAYS[i] : ''}`}>
-                {tag}
-              </span>
-            ))}
-          </div>
         </div>
-
-        <footer className="login-quote">
-          <p>&ldquo;Feedback belongs in the moment — not two weeks later in a slide deck.&rdquo;</p>
-          <p>Korn Ferry SPIN® framing · EXL delivery model</p>
-        </footer>
       </section>
 
       <section className="login-panel">
@@ -134,7 +104,6 @@ export default function Login() {
         <div className={`login-card ${mounted ? 'login-card--enter' : ''}`}>
           <div className="login-card__head">
             <h2>Claim your seat</h2>
-            <p>Name and role shape the briefing, prompts, and what we emphasize on the recap.</p>
           </div>
 
           <form onSubmit={handleStart} style={{ marginTop: 28 }}>
@@ -204,7 +173,7 @@ export default function Login() {
                 </span>
               ) : (
                 <span style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                  Open voice session
+                  Start my session
                   <span style={{ fontSize: 20, lineHeight: 1, transition: 'transform 0.3s ease' }} aria-hidden>
                     →
                   </span>
@@ -212,8 +181,6 @@ export default function Login() {
               )}
             </button>
           </form>
-
-          <p className="login-footnote">SPIN® is a registered trademark of Korn Ferry · Demonstration environment for EXL stakeholders</p>
         </div>
       </section>
     </div>

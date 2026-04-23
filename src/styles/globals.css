@@ -779,7 +779,8 @@ input, select, textarea {
   min-height: min(100%, 720px);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
+  align-items: flex-start;
   padding: clamp(28px, 4vw, 52px) clamp(28px, 4vw, 56px);
   overflow: hidden;
   background:
@@ -912,9 +913,30 @@ input, select, textarea {
   letter-spacing: 0.02em;
 }
 
+.login-hero__logo-wrap {
+  position: absolute;
+  top: clamp(26px, 3vw, 46px);
+  left: clamp(26px, 3vw, 56px);
+  z-index: 2;
+}
+
 .login-hero__content {
   position: relative;
   z-index: 2;
+  max-width: 560px;
+  text-align: left;
+  margin: 0;
+}
+
+.login-hero__logo {
+  width: min(120px, 34vw);
+  height: auto;
+  display: block;
+  background: #fff;
+  padding: 6px 10px;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
+  margin: 0;
 }
 
 .login-hero__kicker {
@@ -927,11 +949,11 @@ input, select, textarea {
 }
 
 .login-hero__title {
-  font-size: clamp(2rem, 4.2vw, 3.25rem);
+  font-size: clamp(2rem, 3.5vw, 2.85rem);
   font-weight: 900;
-  line-height: 1.05;
+  line-height: 1.15;
   letter-spacing: -0.03em;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
   background: linear-gradient(110deg, #fff 0%, #ffe8d9 45%, #fff 90%);
   background-size: 200% auto;
   -webkit-background-clip: text;
@@ -941,11 +963,12 @@ input, select, textarea {
 }
 
 .login-hero__lead {
-  font-size: clamp(15px, 1.5vw, 18px);
-  color: rgba(255, 255, 255, 0.78);
-  line-height: 1.65;
-  max-width: 420px;
-  font-weight: 500;
+  font-size: clamp(16px, 1.4vw, 19px);
+  color: rgba(255, 255, 255, 0.86);
+  line-height: 1.6;
+  max-width: 520px;
+  font-weight: 400;
+  text-wrap: balance;
 }
 
 .login-chips {
@@ -1217,9 +1240,7 @@ input, select, textarea {
   line-height: 1.6;
 }
 
-.login-hero--stagger .login-brand { animation: login-fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
 .login-hero--stagger .login-hero__content { animation: login-fade-up 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both; }
-.login-hero--stagger .login-quote { animation: login-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both; }
 
 @keyframes login-fade-up {
   from {
@@ -1265,3 +1286,4 @@ input, select, textarea {
     transform: translateY(-4px) scale(1);
   }
 }
+
