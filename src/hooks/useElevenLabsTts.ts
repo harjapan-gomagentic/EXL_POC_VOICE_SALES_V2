@@ -85,7 +85,16 @@ export function useElevenLabsTts() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ text: trimmed }),
         });
-        if (!res.ok) throw new Error(`ElevenLabs TTS failed ${res.status}`);
+        if (!res.ok) {
+          let detail = `ElevenLabs TTS failed ${res.status}`;
+          try {
+            const body = (await res.json()) as { error?: string };
+            if (body.error) detail = body.error;
+          } catch {
+            /* keep fallback detail */
+          }
+          throw new Error(detail);
+        }
 
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
@@ -112,7 +121,7 @@ export function useElevenLabsTts() {
           console.warn('[useElevenLabsTts] ElevenLabs failed.', err);
         }
         cleanupAudio();
-        setLastError('ElevenLabs request failed.');
+        setLastError(err instanceof Error ? err.message : 'ElevenLabs request failed.');
         onEnd?.();
       }
     },

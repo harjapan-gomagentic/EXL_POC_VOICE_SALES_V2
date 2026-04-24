@@ -171,7 +171,16 @@ app.post('/api/tts', async c => {
   if (!ttsRes.ok) {
     const err = await ttsRes.text();
     console.error('[elevenlabs] tts error:', ttsRes.status, err);
-    return c.json({ error: `ElevenLabs error ${ttsRes.status}` }, 502);
+    let detail = `ElevenLabs error ${ttsRes.status}`;
+    try {
+      const parsed = JSON.parse(err) as { detail?: { message?: string; code?: string } };
+      const msg = parsed.detail?.message?.trim();
+      const code = parsed.detail?.code?.trim();
+      if (msg) detail = code ? `${msg} (${code})` : msg;
+    } catch {
+      /* keep fallback detail */
+    }
+    return c.json({ error: detail }, 502);
   }
 
   const audio = await ttsRes.arrayBuffer();

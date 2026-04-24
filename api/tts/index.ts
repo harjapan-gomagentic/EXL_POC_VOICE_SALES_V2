@@ -65,7 +65,16 @@ export default async function handler(req: ReqLike, res: ResLike) {
   if (!ttsRes.ok) {
     const err = await ttsRes.text();
     console.error('[elevenlabs][vercel] tts error:', ttsRes.status, err);
-    return res.status(502).json({ error: `ElevenLabs error ${ttsRes.status}` });
+    let detail = `ElevenLabs error ${ttsRes.status}`;
+    try {
+      const parsed = JSON.parse(err) as { detail?: { message?: string; code?: string } };
+      const msg = parsed.detail?.message?.trim();
+      const code = parsed.detail?.code?.trim();
+      if (msg) detail = code ? `${msg} (${code})` : msg;
+    } catch {
+      /* keep fallback detail */
+    }
+    return res.status(502).json({ error: detail });
   }
 
   const audio = new Uint8Array(await ttsRes.arrayBuffer());
