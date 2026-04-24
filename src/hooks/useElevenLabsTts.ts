@@ -16,7 +16,10 @@ export function useElevenLabsTts() {
 
     async function boot() {
       try {
-        const res = await fetch('/api/tts/config');
+        const res = await fetch('/api/tts/config', {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' },
+        });
         if (!res.ok) throw new Error(`TTS config failed ${res.status}`);
         const cfg = (await res.json()) as { enabled?: boolean };
         if (cancelled) return;

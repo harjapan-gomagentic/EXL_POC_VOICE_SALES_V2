@@ -119,6 +119,8 @@ app.post('/api/vapi/webhook', async c => {
 
 app.get('/api/tts/config', c => {
   const enabled = Boolean(process.env.ELEVENLABS_API_KEY && process.env.ELEVENLABS_VOICE_ID);
+  c.header('Cache-Control', 'no-store, max-age=0');
+  c.header('Pragma', 'no-cache');
   return c.json({
     enabled,
     voiceId: process.env.ELEVENLABS_VOICE_ID ?? null,
