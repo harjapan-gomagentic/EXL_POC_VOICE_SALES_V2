@@ -2,7 +2,8 @@ import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useApp, type Message } from '../context/AppContext';
 import { askMarcus } from '../lib/marcus';
 import type { CoachOutcome } from '../lib/coachDebrief';
-import { useVoice, useTTS, isSpeechRecognitionSupported } from '../hooks/useVoice';
+import { useVoice, isSpeechRecognitionSupported } from '../hooks/useVoice';
+import { useElevenLabsTts } from '../hooks/useElevenLabsTts';
 
 const OPENING_MESSAGE: Message = {
   id: 'intro',
@@ -80,16 +81,15 @@ export default function CallBlueprint() {
     setInput(text);
   }, []);
 
-  const { isSpeaking, speak, cancel: cancelTTS } = useTTS();
+  const { isSpeaking, speak, cancel: cancelTTS, audioReady, voiceBackend } = useElevenLabsTts();
   const voiceSupported = isSpeechRecognitionSupported();
 
   useEffect(() => {
-    if (!didInit.current && state.messages.length === 0) {
-      didInit.current = true;
-      dispatch({ type: 'ADD_MESSAGE', message: { ...OPENING_MESSAGE, id: `intro-${Date.now()}` } });
-      speak(OPENING_MESSAGE.content);
-    }
-  }, [dispatch, speak, state.messages.length]);
+    if (!audioReady || didInit.current || state.messages.length > 0) return;
+    didInit.current = true;
+    dispatch({ type: 'ADD_MESSAGE', message: { ...OPENING_MESSAGE, id: `intro-${Date.now()}` } });
+    speak(OPENING_MESSAGE.content);
+  }, [dispatch, speak, state.messages.length, audioReady]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -220,6 +220,24 @@ export default function CallBlueprint() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          {import.meta.env.DEV && (
+            <span
+              className="mono"
+              title="How Marcus audio is played. ElevenLabs = server TTS audio; Browser = speechSynthesis fallback."
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: '0.04em',
+                padding: '4px 8px',
+                borderRadius: 8,
+                background: voiceBackend === 'elevenlabs' ? '#e8f5e9' : voiceBackend === 'browser' ? '#fff3e0' : '#f5f5f5',
+                color: voiceBackend === 'elevenlabs' ? '#2e7d32' : voiceBackend === 'browser' ? '#e65100' : '#757575',
+                border: `1px solid ${voiceBackend === 'elevenlabs' ? '#c8e6c9' : voiceBackend === 'browser' ? '#ffe0b2' : '#e0e0e0'}`,
+              }}
+            >
+              VOICE: {voiceBackend === 'elevenlabs' ? 'ELEVENLABS' : voiceBackend === 'browser' ? 'BROWSER' : '…'}
+            </span>
+          )}
           <span className="mono" style={{ fontSize: 12, color: '#888', fontWeight: 600 }}>
             {mins}:{secs}
           </span>
