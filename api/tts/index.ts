@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 type ReqBody = { text?: string };
 
 type ReqLike = {
