@@ -96,11 +96,24 @@ export function useElevenLabsTts() {
           throw new Error(detail);
         }
 
-        const blob = await res.blob();
+        const contentType = res.headers.get('content-type') ?? '';
+        if (!contentType.toLowerCase().includes('audio')) {
+          const txt = await res.text();
+          throw new Error(`TTS response was not audio (${contentType || 'unknown'}): ${txt.slice(0, 180)}`);
+        }
+
+        const audioBuffer = await res.arrayBuffer();
+        if (!audioBuffer.byteLength) {
+          throw new Error('TTS audio payload was empty.');
+        }
+
+        // Force a standard MIME for wider browser decode compatibility.
+        const blob = new Blob([audioBuffer], { type: 'audio/mpeg' });
         const url = URL.createObjectURL(blob);
         objectUrlRef.current = url;
 
         const audio = new Audio(url);
+        audio.preload = 'auto';
         audioRef.current = audio;
         audio.onended = () => {
           cleanupAudio();
