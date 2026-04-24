@@ -77,7 +77,7 @@ export default async function handler(req: ReqLike, res: ResLike) {
     return res.status(502).json({ error: detail });
   }
 
-  const audio = new Uint8Array(await ttsRes.arrayBuffer());
+  const audio = Buffer.from(await ttsRes.arrayBuffer());
   res.setHeader('Content-Type', 'audio/mpeg');
   res.setHeader('Cache-Control', 'no-store');
   return res.status(200).send(audio);
