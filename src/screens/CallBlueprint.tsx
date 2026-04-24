@@ -81,7 +81,7 @@ export default function CallBlueprint() {
     setInput(text);
   }, []);
 
-  const { isSpeaking, speak, cancel: cancelTTS, audioReady, voiceBackend, lastError } = useElevenLabsTts();
+  const { isSpeaking, speak, cancel: cancelTTS, audioReady, lastError } = useElevenLabsTts();
   const voiceSupported = isSpeechRecognitionSupported();
 
   useEffect(() => {
@@ -220,22 +220,6 @@ export default function CallBlueprint() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <span
-            className="mono"
-            title="How Marcus audio is played. ElevenLabs = server TTS audio; Browser = speechSynthesis fallback."
-            style={{
-              fontSize: 10,
-              fontWeight: 700,
-              letterSpacing: '0.04em',
-              padding: '4px 8px',
-              borderRadius: 8,
-              background: voiceBackend === 'elevenlabs' ? '#e8f5e9' : voiceBackend === 'browser' ? '#fff3e0' : '#f5f5f5',
-              color: voiceBackend === 'elevenlabs' ? '#2e7d32' : voiceBackend === 'browser' ? '#e65100' : '#757575',
-              border: `1px solid ${voiceBackend === 'elevenlabs' ? '#c8e6c9' : voiceBackend === 'browser' ? '#ffe0b2' : '#e0e0e0'}`,
-            }}
-          >
-            VOICE: {voiceBackend === 'elevenlabs' ? 'ELEVENLABS' : voiceBackend === 'browser' ? 'BROWSER' : '…'}
-          </span>
           <span className="mono" style={{ fontSize: 12, color: '#888', fontWeight: 600 }}>
             {mins}:{secs}
           </span>
