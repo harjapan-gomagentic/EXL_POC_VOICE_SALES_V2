@@ -10,6 +10,7 @@ export function useElevenLabsTts() {
   const [backend, setBackend] = useState<TtsBackend>('connecting');
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [audioReady, setAudioReady] = useState(false);
+  const [lastError, setLastError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -23,12 +24,16 @@ export function useElevenLabsTts() {
         if (!res.ok) throw new Error(`TTS config failed ${res.status}`);
         const cfg = (await res.json()) as { enabled?: boolean };
         if (cancelled) return;
+        setLastError(null);
         setBackend(cfg.enabled ? 'elevenlabs' : 'browser');
       } catch (err) {
         if (import.meta.env.DEV) {
           console.warn('[useElevenLabsTts] Could not load /api/tts/config, using browser fallback.', err);
         }
-        if (!cancelled) setBackend('browser');
+        if (!cancelled) {
+          setBackend('browser');
+          setLastError('Could not load TTS config; using browser voice.');
+        }
       } finally {
         if (!cancelled) setAudioReady(true);
       }
@@ -73,6 +78,7 @@ export function useElevenLabsTts() {
       }
 
       try {
+        setLastError(null);
         cleanupAudio();
         const res = await fetch('/api/tts', {
           method: 'POST',
@@ -95,17 +101,19 @@ export function useElevenLabsTts() {
           // Ignore stale events after cleanup or replacement.
           if (audioRef.current !== audio) return;
           cleanupAudio();
-          fallback.speak(trimmed, onEnd);
+          setLastError('ElevenLabs audio playback failed.');
+          onEnd?.();
         };
 
         setIsSpeaking(true);
         await audio.play();
       } catch (err) {
         if (import.meta.env.DEV) {
-          console.warn('[useElevenLabsTts] ElevenLabs failed; using browser fallback.', err);
+          console.warn('[useElevenLabsTts] ElevenLabs failed.', err);
         }
         cleanupAudio();
-        fallback.speak(trimmed, onEnd);
+        setLastError('ElevenLabs request failed.');
+        onEnd?.();
       }
     },
     [backend, cleanupAudio, fallback],
@@ -122,5 +130,6 @@ export function useElevenLabsTts() {
     isSpeaking: isSpeaking || (backend === 'browser' && fallback.isSpeaking),
     audioReady,
     voiceBackend: backend,
+    lastError,
   };
 }
